@@ -1,4 +1,5 @@
 from utils.manipulador_json import carregar_json, salvar_json
+from utils.estoque_persistencia import carregar_estoque, salvar_estoque
 from classes.engradado import Engradado
 from classes.categorias import carregar_categorias, gerenciar_categorias
 from interface.estoque import armazenar_engradado_no_estoque
@@ -41,7 +42,9 @@ def solicitar_valor(campo):
             return valor_formatado
         except ValueError:
             print(f"[!] {campo} inválido. Tente novamente.")
-
+# Espera confirmação do usuário
+def pausar(mensagem="Pressione ENTER para continuar..."):
+    input(f"\n{mensagem}")
 
 # ------------------------------
 # Menu principal e submenu
@@ -346,20 +349,102 @@ def criar_engradado():
     )
 
     print(f"\n✅ Engradado criado com sucesso:\n{engradado}")
-    # (Falta salvar no JSON em database/engradados.json)
+    caminho = "database/engradados.json"
+    engradados = carregar_json(caminho)
+
+    novo_id = f"ENG{str(len(engradados) + 1).zfill(3)}"
+
+    engradados[novo_id] = {
+        "codigo_produto": codigo,
+        "quantidade": quantidade,
+        "lote": lote,
+        "validade": validade,
+        "fabricacao": fabricacao,
+        "preco_compra": preco_compra,
+        "preco_venda": preco_venda,
+        "fornecedor": fornecedor
+    }
+
+    if salvar_json(engradados, caminho):
+        print(f"📦 Engradado salvo com o ID: {novo_id}")
+    else:
+        print("❌ Erro ao salvar o engradado.")
+
+
 
 #Armazena o engradado em algum espaço possivel
 def menu_armazenar_engradado():
-    # Engradado de teste (futuramente substituir por um engradado real)
-    engradado_teste = Engradado(
-        codigo_produto='P001',
-        quantidade=10,
-        lote='L001',
-        validade='01/12/2025',
-        fabricacao='01/12/2024',
-        preco_compra='5.00',
-        preco_venda='8.00',
-        fornecedor='Fornecedor Teste'
-    )
-    estoque = Estoque()
-    armazenar_engradado_no_estoque(estoque, engradado_teste)
+    exibir_cabecalho()
+    print("ARMAZENAR ENGRADADO NO ESTOQUE".center(50, " "))
+    print("=" * 50)
+
+    # Carrega os engradados disponíveis que ainda não foram para o estoque
+    caminho_engradados = "database/engradados.json"
+    engradados_dict = carregar_json(caminho_engradados)
+    if not engradados_dict:
+        print("⚠️ Nenhum engradado disponível para armazenar.")
+        pausar()
+        return
+
+    # Exibe os engradados disponíveis para seleção
+    print(f"\nEngradados disponíveis:\n")
+    ids_engradados = list(engradados_dict.keys())
+    for idx, eng_id in enumerate(ids_engradados, 1):
+        eng = engradados_dict[eng_id]
+        print(f"[{idx}] ID: {eng_id} | Produto: {eng['codigo_produto']} | Lote: {eng['lote']}")
+
+    # Seleção do engradado pelo usuário
+    try:
+        escolha = int(input(f"\nEscolha o número do engradado: "))
+        if not (1 <= escolha <= len(ids_engradados)):
+            raise ValueError("Número fora do intervalo.")
+    except ValueError:
+        print("[!] Entrada inválida.")
+        pausar()
+        return
+
+    id_selecionado = ids_engradados[escolha - 1]
+    dados_engradado = engradados_dict[id_selecionado]
+    engradado_obj = Engradado(**dados_engradado)
+
+    # Carrega o estado atual do estoque usando a função correta
+    estoque = carregar_estoque()
+
+    # Mostra as posições válidas para o engradado selecionado
+    print("\nEndereços disponíveis para este produto:")
+    posicoes_validas = []
+    for posicao, pilha in estoque.galpao.items():
+        topo = pilha.topo()
+        # Condições: a pilha não está cheia E (está vazia OU o produto no topo é o mesmo)
+        if len(pilha.pilha) < 5 and (pilha.esta_vazia() or topo.codigo_produto == engradado_obj.codigo_produto):
+            produto_topo = f"Produto: {topo.codigo_produto}" if topo else "Vazio"
+            print(f"  - {posicao} (Ocupado: {len(pilha.pilha)}/5) | {produto_topo}")
+            posicoes_validas.append(posicao)
+    
+    if not posicoes_validas:
+        print("\n[!] Não há nenhuma posição disponível para este tipo de produto no momento.")
+        pausar()
+        return
+
+    # Solicita o destino e armazena
+    destino = input("\nDigite o endereço onde deseja armazenar (ex: B3): ").strip().upper()
+    if destino not in posicoes_validas:
+        print("[!] Endereço inválido ou não disponível para este produto.")
+        pausar()
+        return
+
+    # Armazena o engradado na posição e salva o estado do estoque
+    if estoque.armazenar_engradado(destino, engradado_obj):
+        print(f"\n✅ Engradado {id_selecionado} armazenado com sucesso em {destino}.")
+        
+        # Remove o engradado da lista de "disponíveis" e salva a alteração
+        del engradados_dict[id_selecionado]
+        salvar_json(engradados_dict, caminho_engradados)
+        
+        # Salva o estado atualizado do estoque usando a função correta
+        salvar_estoque(estoque)
+    else:
+        # Esta mensagem apareceria se a pilha estivesse cheia, mas a lógica já previne isso
+        print("❌ Falha ao armazenar o engradado.")
+
+    pausar()
