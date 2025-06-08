@@ -11,11 +11,15 @@ import os
 # ------------------------------
 # Funções auxiliares
 # ------------------------------
+#Funçao para limpar terminal
+# Limpa a tela para manter interface limpa
+def limpar_tela():
+    os.system('cls' if os.name == 'nt' else 'clear')
 #Função pra exibir um cabeçalho padrão
 def exibir_cabecalho():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    limpar_tela()
     print("=" * 50)
-    print("|  S T O O K   -   G E R E N C I A D O R   V1.0  |".center(50))
+    print("|  S T O O K   -   G E R E N C I A D O R   V2.0  |".center(50))
     print("=" * 50)
 #Função para formatar o peso para kg
 def formatar_peso(peso_raw):
@@ -54,15 +58,16 @@ def menu_principal():
     print("[ 1 ] Gerenciar Produtos")
     print("[ 2 ] Criar Engradado")
     print("[ 3 ] Armazenar Engradado")
+    print("[ 4 ] Visualizar Estoque") 
     print("[ 0 ] Sair")
     return input("\nEscolha uma opção: ")
 #Opções Submenu -> Produtos
 def submenu_produtos():
     while True:
         exibir_cabecalho()
-        print("|                GERENCIAR PRODUTOS               |")
+        print("|                GERENCIAR PRODUTOS              |")
         print("=" * 50)
-        print("[ 1 ]  Cadastrar novo produto")
+        print("[ 1 ] Cadastrar novo produto")
         print("[ 2 ] Listar todos os produtos")
         print("[ 3 ] Atualizar produto existente")
         print("[ 4 ] Remover produto")
@@ -127,8 +132,7 @@ def cadastrar_produto():
         input("\nPressione ENTER para voltar...")
         return
 
-    print("|               Cadastro de Novo Produto                |")
-    print("=" * 50)
+    
     campos = {
         "codigo": "[vazio]",
         "nome": "[vazio]",
@@ -140,7 +144,8 @@ def cadastrar_produto():
     for campo in ["codigo", "nome", "peso", "fabricante"]:
         while True:
             exibir_cabecalho()
-            print("Preenchimento dos dados:\n")
+            print("|            Cadastro de Novo Produto            |")
+            print("=" * 50)
             for chave, valor in campos.items():
                 print(f"{chave.capitalize()}: {valor}")
             entrada = input(f"\nInforme o valor para '{campo}': ").strip()
@@ -448,3 +453,42 @@ def menu_armazenar_engradado():
         print("❌ Falha ao armazenar o engradado.")
 
     pausar()
+
+# Função para exibir o conteúdo do estoque
+def visualizar_estoque_detalhado():
+    """
+    Exibe um mapa visual do estoque, mostrando a ocupação e o produto
+    de cada pilha no galpão.
+    """
+    exibir_cabecalho()
+    print("VISUALIZAÇÃO DO ESTOQUE".center(50))
+    print("=" * 50)
+
+    estoque = carregar_estoque()  # Carrega o estado atual do estoque
+    produtos = carregar_json("database/produtos.json") # Carrega os dados dos produtos para consulta
+
+    # Itera sobre o layout do galpão (8 linhas x 5 colunas)
+    for linha in range(1, 9):
+        print("-" * 50)
+        for coluna in "ABCDE":
+            posicao = f"{coluna}{linha}"
+            pilha_obj = estoque.galpao.get(posicao)
+
+            if not pilha_obj:
+                print(f"| {posicao}: Posição Inválida")
+                continue
+
+            ocupacao = len(pilha_obj.pilha)
+            barra_visual = "▉" * ocupacao + "░" * (5 - ocupacao)
+
+            info_produto = "Vazio"
+            if not pilha_obj.esta_vazia():
+                topo = pilha_obj.topo()
+                cod_produto = topo.codigo_produto
+                nome_produto = produtos.get(cod_produto, {}).get("nome", "Desconhecido")
+                info_produto = f"{nome_produto} ({cod_produto})"
+
+            print(f"| {posicao}: [{barra_visual}] {ocupacao}/5 | {info_produto}")
+    print("-" * 50)
+    pausar()
+

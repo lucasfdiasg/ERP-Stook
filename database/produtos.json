@@ -28,5 +28,11 @@
         "peso": "0,512",
         "fabricante": "Igarapé",
         "categoria": "agua"
+    },
+    "15789": {
+        "nome": "Água Mineral Igaratá",
+        "peso": "0,520",
+        "fabricante": "Igaratá Envazamentos",
+        "categoria": "agua"
     }
 }
