@@ -1,3 +1,4 @@
+#Classe engradado para criar um objeto engradado
 class Engradado:
     def __init__(self, codigo_produto, quantidade, lote, validade, fabricacao, preco_compra, preco_venda, fornecedor):
         self.codigo_produto = codigo_produto

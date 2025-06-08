@@ -1,0 +1,32 @@
+{
+    "15487": {
+        "nome": "Skol Lata",
+        "peso": "0,350",
+        "fabricante": "AMBEV",
+        "categoria": "cerveja"
+    },
+    "15215": {
+        "nome": "Skol Longneck",
+        "peso": "0,512",
+        "fabricante": "Ambev",
+        "categoria": "cerveja"
+    },
+    "15467": {
+        "nome": "Suco DellVale",
+        "peso": "1",
+        "fabricante": "DellVale",
+        "categoria": "sucos"
+    },
+    "15464": {
+        "nome": "Suco Tial",
+        "peso": "1",
+        "fabricante": "Tial",
+        "categoria": "sucos"
+    },
+    "15733": {
+        "nome": "Água Mineral Igarapé",
+        "peso": "0,512",
+        "fabricante": "Igarapé",
+        "categoria": "agua"
+    }
+}

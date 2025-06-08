@@ -1,3 +1,4 @@
+#Classe produto para instanciar um objeto
 class Produto:
     def __init__(self, codigo, nome, peso, fabricante, categoria):
         self.codigo = codigo
