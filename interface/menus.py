@@ -487,10 +487,6 @@ def menu_armazenar_engradado():
 
 # Função para exibir o conteúdo do estoque
 def visualizar_estoque_detalhado():
-    """
-    Exibe um mapa visual do estoque, mostrando a ocupação e o produto
-    de cada pilha no galpão.
-    """
     exibir_cabecalho()
     print("VISUALIZAÇÃO DO ESTOQUE".center(50))
     print("=" * 50)
