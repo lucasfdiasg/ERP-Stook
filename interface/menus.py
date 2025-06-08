@@ -5,6 +5,8 @@ from classes.categorias import carregar_categorias, gerenciar_categorias
 from interface.estoque import armazenar_engradado_no_estoque
 from classes.estoque import Estoque
 from classes.engradado import Engradado
+from utils.pedidos_persistencia import carregar_fila_pedidos, salvar_fila_pedidos
+from classes.pedido import Pedido
 from datetime import datetime
 import os
 
@@ -58,7 +60,9 @@ def menu_principal():
     print("[ 1 ] Gerenciar Produtos")
     print("[ 2 ] Criar Engradado")
     print("[ 3 ] Armazenar Engradado")
-    print("[ 4 ] Visualizar Estoque") 
+    print("[ 4 ] Visualizar Estoque")
+    print("[ 5 ] Remover Engradado do Estoque")
+    print("[ 6 ] Gerenciar Pedidos")  # <-- NOVA OPÇÃO
     print("[ 0 ] Sair")
     return input("\nEscolha uma opção: ")
 #Opções Submenu -> Produtos
@@ -91,6 +95,33 @@ def submenu_produtos():
         else:
             print(f"\nOpção inválida. Tente novamente.")
         input(f"\nPressione ENTER para continuar...")
+#Opções Submenu -> Pedidos
+def submenu_pedidos():
+    while True:
+        exibir_cabecalho()
+        print("|                 GERENCIAR PEDIDOS                 |")
+        print("=" * 50)
+        print("[ 1 ] Registrar Novo Pedido")
+        print("[ 2 ] Processar Próximo Pedido (Em breve)")
+        print("[ 3 ] Visualizar Fila de Pedidos (Em breve)")
+        print("[ 0 ] Voltar ao menu principal")
+
+        opcao = input("\nEscolha uma opção: ")
+
+        if opcao == '1':
+            registrar_novo_pedido()
+        elif opcao == '2':
+            print("\nFuncionalidade em desenvolvimento.")
+            pausar()
+        elif opcao == '3':
+            print("\nFuncionalidade em desenvolvimento.")
+            pausar()
+        elif opcao == '0':
+            break
+        else:
+            print(f"\nOpção inválida. Tente novamente.")
+
+
 
 # ------------------------------
 # Funções CRUD de Produto
@@ -492,3 +523,60 @@ def visualizar_estoque_detalhado():
     print("-" * 50)
     pausar()
 
+
+# ------------------------------
+# Função de criação pedidos
+# ------------------------------
+def registrar_novo_pedido():
+    exibir_cabecalho()
+    print("|                REGISTRO DE NOVO PEDIDO              |")
+    print("=" * 50)
+
+    produtos = carregar_json("database/produtos.json")
+    if not produtos:
+        print("Nenhum produto cadastrado no sistema para criar um pedido.")
+        pausar()
+        return
+
+    nome_solicitante = input("Nome do solicitante: ").strip()
+    if not nome_solicitante:
+        print("[!] O nome do solicitante é obrigatório.")
+        pausar()
+        return
+
+    fila_pedidos = carregar_fila_pedidos()
+    # Gera um ID único para o novo pedido
+    novo_id = f"PED{len(fila_pedidos) + 1:03d}"
+    novo_pedido = Pedido(nome_solicitante, novo_id)
+
+    while True:
+        print("\n--- Adicionar Item ao Pedido ---")
+        # Lista os produtos disponíveis para facilitar a escolha
+        for codigo, info in produtos.items():
+            print(f"- {codigo}: {info['nome']}")
+
+        codigo_produto = input("Digite o código do produto (ou '0' para finalizar): ").strip()
+        if codigo_produto == '0':
+            break
+
+        if codigo_produto not in produtos:
+            print("[!] Código de produto inválido.")
+            continue
+
+        quantidade = input(f"Quantidade para o produto '{produtos[codigo_produto]['nome']}': ").strip()
+
+        if novo_pedido.adicionar_item(codigo_produto, quantidade):
+            print("✅ Item adicionado com sucesso!")
+
+        input("\nPressione ENTER para adicionar outro item ou finalizar...")
+
+    if not novo_pedido.itens:
+        print("\nNenhum item adicionado. Pedido cancelado.")
+    else:
+        fila_pedidos.enfileirar(novo_pedido)
+        if salvar_fila_pedidos(fila_pedidos):
+            print(f"\n✅ Pedido {novo_id} registrado com sucesso e adicionado à fila!")
+        else:
+            print("\n[!] Erro ao salvar o pedido na fila.")
+
+    pausar()

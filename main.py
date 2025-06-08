@@ -5,7 +5,7 @@ from interface.menus import menu_principal,\
                             criar_engradado,\
                             menu_armazenar_engradado, \
                             exibir_cabecalho, \
-                            pausar, visualizar_estoque_detalhado
+                            pausar, visualizar_estoque_detalhado, remover_engradado_do_estoque, submenu_pedidos
 
 
 # Loop principal do sistema
@@ -23,6 +23,10 @@ def executar():
                 menu_armazenar_engradado()
             elif opcao == '4':
                 visualizar_estoque_detalhado()
+            elif opcao == '5':
+                remover_engradado_do_estoque()      
+            elif opcao == '6':
+                submenu_pedidos()
             elif opcao == '0':
                 print("\nEncerrando o sistema... Até logo! 👋")
                 time.sleep(1)
