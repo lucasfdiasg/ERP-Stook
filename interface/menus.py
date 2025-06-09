@@ -21,7 +21,7 @@ def limpar_tela():
 def exibir_cabecalho():
     limpar_tela()
     print("=" * 50)
-    print("|  S T O O K   -   G E R E N C I A D O R   V2.0  |".center(50))
+    print("|  S T O O K   -   G E R E N C I A D O R   V2.1  |".center(50))
     print("=" * 50)
 #Função para formatar o peso para kg
 def formatar_peso(peso_raw):
@@ -574,5 +574,44 @@ def registrar_novo_pedido():
             print(f"\n✅ Pedido {novo_id} registrado com sucesso e adicionado à fila!")
         else:
             print("\n[!] Erro ao salvar o pedido na fila.")
+
+    pausar()
+
+def remover_engradado_do_estoque():
+    """
+    Remove o engradado do topo de uma pilha selecionada no estoque.
+    """
+    # Reutilizamos a função de visualização para o usuário ver o que pode remover
+    visualizar_estoque_detalhado()
+
+    # Carrega o estado atual para manipulação
+    estoque = carregar_estoque()
+
+    posicao = input("\nDigite a posição do engradado a ser removido (ex: A1): ").strip().upper()
+
+    # Validação 1: A posição existe no galpão?
+    if posicao not in estoque.galpao:
+        print("\n[!] Posição inválida.")
+        pausar()
+        return
+
+    # Validação 2: A pilha na posição não está vazia?
+    if estoque.galpao[posicao].esta_vazia():
+        print(f"\n[!] Não há engradados na posição {posicao}.")
+        pausar()
+        return
+
+    # Se as validações passaram, remove o engradado
+    engradado_removido = estoque.remover_engradado(posicao)
+
+    if engradado_removido:
+        # Salva o novo estado do estoque no arquivo JSON
+        if salvar_estoque(estoque):
+            print(f"\n✅ Engradado removido com sucesso da posição {posicao}.")
+            print(f"   Produto: {engradado_removido.codigo_produto} | Lote: {engradado_removido.lote}")
+        else:
+            print("\n[!] Erro ao salvar o estado do estoque após a remoção.")
+    else:
+        print("\n[!] Falha ao remover o engradado.")
 
     pausar()

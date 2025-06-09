@@ -1,0 +1,13 @@
+[
+    {
+        "id_pedido": "PED001",
+        "nome_solicitante": "Lucas Manuel",
+        "data_solicitacao": "08/06/2025 21:16:51",
+        "itens": [
+            {
+                "codigo_produto": "15487",
+                "quantidade": 5
+            }
+        ]
+    }
+]
