@@ -1,11 +1,11 @@
 from utils.manipulador_json import carregar_json, salvar_json
 from utils.estoque_persistencia import carregar_estoque, salvar_estoque
+from utils.pedidos_persistencia import carregar_fila_pedidos, salvar_fila_pedidos, registrar_pedido_processado
 from classes.engradado import Engradado
 from classes.categorias import carregar_categorias, gerenciar_categorias
 from interface.estoque import armazenar_engradado_no_estoque
 from classes.estoque import Estoque
-from classes.engradado import Engradado
-from utils.pedidos_persistencia import carregar_fila_pedidos, salvar_fila_pedidos
+from utils.exibicao import exibir_cabecalho, pausar
 from classes.pedido import Pedido
 from datetime import datetime
 import os
@@ -60,9 +60,10 @@ def menu_principal():
     print("[ 1 ] Gerenciar Produtos")
     print("[ 2 ] Criar Engradado")
     print("[ 3 ] Armazenar Engradado")
-    print("[ 4 ] Visualizar Estoque")
-    print("[ 5 ] Remover Engradado do Estoque")
-    print("[ 6 ] Gerenciar Pedidos")  # <-- NOVA OPÇÃO
+    print("[ 4 ] Gerenciar Pedidos")  # Agora aponta para o submenu
+    print("[ 5 ] Visualizar Histórico de Pedidos")
+    print("[ 6 ] Visualizar Estoque")
+    print("[ 7 ] Remover Engradado do Estoque")
     print("[ 0 ] Sair")
     return input("\nEscolha uma opção: ")
 #Opções Submenu -> Produtos
@@ -102,8 +103,8 @@ def submenu_pedidos():
         print("|                 GERENCIAR PEDIDOS                 |")
         print("=" * 50)
         print("[ 1 ] Registrar Novo Pedido")
-        print("[ 2 ] Processar Próximo Pedido (Em breve)")
-        print("[ 3 ] Visualizar Fila de Pedidos (Em breve)")
+        print("[ 2 ] Processar Próximo Pedido")
+        print("[ 3 ] Visualizar Fila de Pedidos")
         print("[ 0 ] Voltar ao menu principal")
 
         opcao = input("\nEscolha uma opção: ")
@@ -111,11 +112,10 @@ def submenu_pedidos():
         if opcao == '1':
             registrar_novo_pedido()
         elif opcao == '2':
-            print("\nFuncionalidade em desenvolvimento.")
-            pausar()
+            processar_pedido()
         elif opcao == '3':
-            print("\nFuncionalidade em desenvolvimento.")
-            pausar()
+            visualizar_fila_pedidos()
+
         elif opcao == '0':
             break
         else:
@@ -401,7 +401,7 @@ def criar_engradado():
         "fornecedor": fornecedor
     }
 
-    if salvar_json(engradados, caminho):
+    if salvar_json(caminho, engradados):
         print(f"📦 Engradado salvo com o ID: {novo_id}")
     else:
         print("❌ Erro ao salvar o engradado.")
@@ -523,60 +523,78 @@ def visualizar_estoque_detalhado():
 # ------------------------------
 # Função de criação pedidos
 # ------------------------------
+#Função que adiciona novos pedidos à fila de pedidos
 def registrar_novo_pedido():
     exibir_cabecalho()
-    print("|                REGISTRO DE NOVO PEDIDO              |")
+    print("|       REGISTRO DE NOVO PEDIDO (ATACADO)        |")
     print("=" * 50)
 
     produtos = carregar_json("database/produtos.json")
+    estoque = carregar_estoque()
+
     if not produtos:
-        print("Nenhum produto cadastrado no sistema para criar um pedido.")
-        pausar()
-        return
+        print("Nenhum produto cadastrado no sistema.")
+        return pausar()
 
     nome_solicitante = input("Nome do solicitante: ").strip()
     if not nome_solicitante:
         print("[!] O nome do solicitante é obrigatório.")
-        pausar()
-        return
+        return pausar()
+
+    # Identificar os produtos com engradados disponíveis no estoque
+    produtos_disponiveis = {}
+    for posicao, pilha in estoque.galpao.items():
+        if not pilha.esta_vazia():
+            topo = pilha.topo()
+            codigo = topo.codigo_produto
+            produtos_disponiveis[codigo] = produtos.get(codigo, {"nome": "Desconhecido"})
+
+    if not produtos_disponiveis:
+        print("❌ Nenhum produto disponível no estoque para pedidos.")
+        return pausar()
 
     fila_pedidos = carregar_fila_pedidos()
-    # Gera um ID único para o novo pedido
     novo_id = f"PED{len(fila_pedidos) + 1:03d}"
     novo_pedido = Pedido(nome_solicitante, novo_id)
 
     while True:
-        print("\n--- Adicionar Item ao Pedido ---")
-        # Lista os produtos disponíveis para facilitar a escolha
-        for codigo, info in produtos.items():
+        print("\n--- Adicionar Engradado ao Pedido ---")
+        for codigo, info in produtos_disponiveis.items():
             print(f"- {codigo}: {info['nome']}")
 
         codigo_produto = input("Digite o código do produto (ou '0' para finalizar): ").strip()
         if codigo_produto == '0':
             break
 
-        if codigo_produto not in produtos:
-            print("[!] Código de produto inválido.")
+        if codigo_produto not in produtos_disponiveis:
+            print("[!] Produto não disponível no estoque.")
             continue
 
-        quantidade = input(f"Quantidade para o produto '{produtos[codigo_produto]['nome']}': ").strip()
+        try:
+            quantidade = int(input("Quantidade de ENGRADADOS: ").strip())
+            if quantidade <= 0:
+                raise ValueError
+        except ValueError:
+            print("[!] Quantidade inválida.")
+            continue
 
         if novo_pedido.adicionar_item(codigo_produto, quantidade):
-            print("✅ Item adicionado com sucesso!")
+            print("✅ Engradado(s) adicionado(s) ao pedido.")
 
-        input("\nPressione ENTER para adicionar outro item ou finalizar...")
+        input("\nPressione ENTER para continuar adicionando ou finalizar...")
 
     if not novo_pedido.itens:
         print("\nNenhum item adicionado. Pedido cancelado.")
     else:
         fila_pedidos.enfileirar(novo_pedido)
         if salvar_fila_pedidos(fila_pedidos):
-            print(f"\n✅ Pedido {novo_id} registrado com sucesso e adicionado à fila!")
+            print(f"\n✅ Pedido {novo_id} registrado com sucesso!")
         else:
-            print("\n[!] Erro ao salvar o pedido na fila.")
+            print("\n[!] Erro ao salvar o pedido.")
 
     pausar()
 
+#Função que remove um engradado do estoque
 def remover_engradado_do_estoque():
     """
     Remove o engradado do topo de uma pilha selecionada no estoque.
@@ -613,5 +631,116 @@ def remover_engradado_do_estoque():
             print("\n[!] Erro ao salvar o estado do estoque após a remoção.")
     else:
         print("\n[!] Falha ao remover o engradado.")
+
+    pausar()
+# Função que processa os pedidos
+def processar_pedido():
+    exibir_cabecalho()
+    print("PROCESSAR PRÓXIMO PEDIDO".center(50))
+    print("=" * 50)
+
+    fila = carregar_fila_pedidos()
+    if fila.esta_vazia():
+        print("📭 Nenhum pedido na fila.")
+        return pausar()
+
+    pedido = fila.desenfileirar()
+    print(f"🧾 Pedido ID: {pedido.id_pedido} | Solicitante: {pedido.nome_solicitante}")
+    print("-" * 50)
+
+    estoque = carregar_estoque()
+    atendido_completo = True
+
+    for item in pedido.itens:
+        codigo_produto = item["codigo_produto"]
+        quantidade_engradados = int(item["quantidade"])
+        restantes = quantidade_engradados
+
+        print(f"🔹 Produto {codigo_produto} | Engradados solicitados: {quantidade_engradados}")
+
+        # Busca todas as pilhas com engradados do produto (em ordem de varredura)
+        posicoes_com_produto = [
+            pos for pos, pilha in estoque.galpao.items()
+            if not pilha.esta_vazia() and pilha.topo().codigo_produto == codigo_produto
+        ]
+
+        for pos in posicoes_com_produto:
+            pilha = estoque.galpao[pos]
+            while not pilha.esta_vazia() and pilha.topo().codigo_produto == codigo_produto and restantes > 0:
+                engradado_removido = pilha.desempilhar()
+                restantes -= 1
+                print(f"✅ Retirado 1 engradado de {codigo_produto} da posição {pos}.")
+
+            if restantes == 0:
+                break
+
+        if restantes > 0:
+            atendido_completo = False
+            print(f"❌ Faltaram {restantes} engradado(s) de {codigo_produto} no estoque.")
+
+    # Atualiza estoque e fila
+    salvar_estoque(estoque)
+    salvar_fila_pedidos(fila)
+
+    if atendido_completo:
+        print("\n🎉 Pedido atendido COMPLETAMENTE!")
+    else:
+        print("\n⚠️ Pedido atendido PARCIALMENTE.")
+
+    registrar_pedido_processado(pedido, completo=atendido_completo)
+    pausar()
+
+
+    # Atualiza estoque e fila
+    salvar_estoque(estoque)
+    salvar_fila_pedidos(fila)
+
+    # Registra o pedido como processado
+    registrar_pedido_processado(pedido, completo=atendido_completo)
+
+    pausar()
+#Função que exibe o histórico de pedidos
+def visualizar_historico_pedidos():
+    exibir_cabecalho()
+    print("HISTÓRICO DE PEDIDOS ATENDIDOS".center(50))
+    print("=" * 50)
+
+    historico = carregar_json("database/historico_pedidos.json")
+    if not historico:
+        print("📭 Nenhum pedido processado ainda.")
+        return pausar()
+
+    for pedido_id, dados in historico.items():
+        print(f"\n🧾 Pedido ID: {pedido_id}")
+        print(f"👤 Solicitante: {dados['solicitante']}")
+        print(f"📦 Status: {'✅ Completo' if dados['status'] == 'Completo' else '⚠️ Parcial'}")
+        print("Engradados pedidos:")
+        for item in dados["itens"]:
+            cod = item["codigo_produto"]
+            qtd = item["quantidade"]
+            print(f" - {cod}: {qtd} engradado(s)")
+        print("-" * 50)
+
+    pausar()
+
+#Função que mostra a fila de pedidos
+def visualizar_fila_pedidos():
+    exibir_cabecalho()
+    print("FILA DE PEDIDOS PENDENTES".center(50))
+    print("=" * 50)
+
+    fila = carregar_fila_pedidos()
+    if fila.esta_vazia():
+        print("📭 Nenhum pedido na fila.")
+        return pausar()
+
+    for idx, pedido in enumerate(fila._elementos, 1):
+        print(f"\n[{idx}] Pedido ID: {pedido.id_pedido}")
+        print(f"👤 Solicitante: {pedido.nome_solicitante}")
+        print(f"📅 Data: {pedido.data_solicitacao}")
+        print("Itens:")
+        for item in pedido.itens:
+            print(f" - {item['codigo_produto']}: {item['quantidade']} un.")
+        print("-" * 50)
 
     pausar()

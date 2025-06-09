@@ -1,46 +1,15 @@
 {
-    "A1": [
-        {
-            "codigo_produto": "P001",
-            "quantidade": 10,
-            "lote": "L001",
-            "validade": "01/12/2025",
-            "fabricacao": "01/12/2024",
-            "preco_compra": "5.00",
-            "preco_venda": "8.00",
-            "fornecedor": "Fornecedor Teste"
-        },
-        {
-            "codigo_produto": "P001",
-            "quantidade": 10,
-            "lote": "L001",
-            "validade": "01/12/2025",
-            "fabricacao": "01/12/2024",
-            "preco_compra": "5.00",
-            "preco_venda": "8.00",
-            "fornecedor": "Fornecedor Teste"
-        }
-    ],
+    "A1": [],
     "A2": [
         {
-            "codigo_produto": "15487",
-            "quantidade": 180,
-            "lote": "1123",
-            "validade": "22/05/2028",
-            "fabricacao": "22/03/2024",
-            "preco_compra": "R$ 1,80",
-            "preco_venda": "R$ 5,65",
-            "fornecedor": "Transportes de Bebidas"
-        },
-        {
-            "codigo_produto": "15487",
+            "codigo_produto": "15733",
             "quantidade": 150,
-            "lote": "1156",
-            "validade": "22/08/2025",
-            "fabricacao": "22/02/2024",
-            "preco_compra": "R$ 2,20",
-            "preco_venda": "R$ 5,30",
-            "fornecedor": "Trans"
+            "lote": "1151",
+            "validade": "22/09/2025",
+            "fabricacao": "22/02/2023",
+            "preco_compra": "R$ 1,50",
+            "preco_venda": "R$ 2,10",
+            "fornecedor": "Drinks"
         }
     ],
     "A3": [],

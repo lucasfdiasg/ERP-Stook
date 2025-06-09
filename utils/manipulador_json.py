@@ -1,8 +1,16 @@
 import json
 import os
 
+# ===============================================
 # Função para salvar qualquer dicionário como JSON
-def salvar_json(dado, caminho_arquivo):
+# -----------------------------------------------
+# Parâmetros:
+# - caminho_arquivo: string com o caminho do arquivo (ex: "database/estoque.json")
+# - dado: qualquer estrutura Python serializável (geralmente um dicionário ou lista)
+# Retorna:
+# - True se salvou com sucesso, False se houve erro
+# ===============================================
+def salvar_json(caminho_arquivo, dado): 
     try:
         with open(caminho_arquivo, 'w', encoding='utf-8') as f:
             json.dump(dado, f, indent=4, ensure_ascii=False)
@@ -11,10 +19,17 @@ def salvar_json(dado, caminho_arquivo):
         print(f"[ERRO] Ao salvar arquivo: {e}")
         return False
 
-# Função para carregar qualquer JSON em um dicionário
+# ===============================================
+# Função para carregar um arquivo JSON
+# -----------------------------------------------
+# Parâmetro:
+# - caminho_arquivo: string com o caminho do arquivo (ex: "database/produtos.json")
+# Retorna:
+# - O conteúdo do JSON como dicionário (ou lista), ou {} se o arquivo não existir ou tiver erro
+# ===============================================
 def carregar_json(caminho_arquivo):
     if not os.path.exists(caminho_arquivo):
-        return {}
+        return {}  # Arquivo ainda não existe
     try:
         with open(caminho_arquivo, 'r', encoding='utf-8') as f:
             return json.load(f)

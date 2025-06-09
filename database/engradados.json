@@ -1,12 +1,1 @@
-{
-    "ENG001": {
-        "codigo_produto": "15789",
-        "quantidade": 500,
-        "lote": "1174",
-        "validade": "22/07/2025",
-        "fabricacao": "22/03/2022",
-        "preco_compra": "R$ 1,50",
-        "preco_venda": "R$ 3,50",
-        "fornecedor": "Drinks"
-    }
-}
+{}
