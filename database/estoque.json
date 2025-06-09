@@ -1,17 +1,6 @@
 {
     "A1": [],
-    "A2": [
-        {
-            "codigo_produto": "15733",
-            "quantidade": 150,
-            "lote": "1151",
-            "validade": "22/09/2025",
-            "fabricacao": "22/02/2023",
-            "preco_compra": "R$ 1,50",
-            "preco_venda": "R$ 2,10",
-            "fornecedor": "Drinks"
-        }
-    ],
+    "A2": [],
     "A3": [],
     "A4": [],
     "A5": [],

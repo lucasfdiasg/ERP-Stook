@@ -1,0 +1,12 @@
+{
+    "PED001": {
+        "solicitante": "Rafael",
+        "itens": [
+            {
+                "codigo_produto": "15487",
+                "quantidade": 10
+            }
+        ],
+        "status": "Parcial"
+    }
+}

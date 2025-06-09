@@ -3,26 +3,17 @@ from utils.estoque_persistencia import carregar_estoque, salvar_estoque
 from utils.pedidos_persistencia import carregar_fila_pedidos, salvar_fila_pedidos, registrar_pedido_processado
 from classes.engradado import Engradado
 from classes.categorias import carregar_categorias, gerenciar_categorias
-from interface.estoque import armazenar_engradado_no_estoque
 from classes.estoque import Estoque
 from utils.exibicao import exibir_cabecalho, pausar
 from classes.pedido import Pedido
 from datetime import datetime
+from utils.exibicao import exibir_cabecalho, pausar, limpar_tela 
 import os
 
 # ------------------------------
 # Funções auxiliares
 # ------------------------------
 #Funçao para limpar terminal
-# Limpa a tela para manter interface limpa
-def limpar_tela():
-    os.system('cls' if os.name == 'nt' else 'clear')
-#Função pra exibir um cabeçalho padrão
-def exibir_cabecalho():
-    limpar_tela()
-    print("=" * 50)
-    print("|  S T O O K   -   G E R E N C I A D O R   V2.1  |".center(50))
-    print("=" * 50)
 #Função para formatar o peso para kg
 def formatar_peso(peso_raw):
     try:
@@ -48,9 +39,7 @@ def solicitar_valor(campo):
             return valor_formatado
         except ValueError:
             print(f"[!] {campo} inválido. Tente novamente.")
-# Espera confirmação do usuário
-def pausar(mensagem="Pressione ENTER para continuar..."):
-    input(f"\n{mensagem}")
+
 
 # ------------------------------
 # Menu principal e submenu
@@ -290,7 +279,6 @@ def atualizar_produto():
                 print("[!] Opção inválida. Digite 1 ou 2.")
         except ValueError:
             print("[!] Entrada inválida. Digite apenas 1 ou 2.")
-
 # Função para remover produtos cadastrados
 def remover_produto():
     exibir_cabecalho()
@@ -405,9 +393,6 @@ def criar_engradado():
         print(f"📦 Engradado salvo com o ID: {novo_id}")
     else:
         print("❌ Erro ao salvar o engradado.")
-
-
-
 #Armazena o engradado em algum espaço possivel
 def menu_armazenar_engradado():
     exibir_cabecalho()
@@ -475,7 +460,7 @@ def menu_armazenar_engradado():
         
         # Remove o engradado da lista de "disponíveis" e salva a alteração
         del engradados_dict[id_selecionado]
-        salvar_json(engradados_dict, caminho_engradados)
+        salvar_json(caminho_engradados, engradados_dict) # Argumentos na ordem correta
         
         # Salva o estado atualizado do estoque usando a função correta
         salvar_estoque(estoque)
@@ -495,9 +480,10 @@ def visualizar_estoque_detalhado():
     produtos = carregar_json("database/produtos.json") # Carrega os dados dos produtos para consulta
 
     # Itera sobre o layout do galpão (8 linhas x 5 colunas)
-    for linha in range(1, 9):
+    for coluna in "ABCDE":
         print("-" * 50)
-        for coluna in "ABCDE":
+        print(f"COLUNA {coluna}".center(50))
+        for linha in range(1, 9):
             posicao = f"{coluna}{linha}"
             pilha_obj = estoque.galpao.get(posicao)
 
@@ -689,16 +675,7 @@ def processar_pedido():
 
     registrar_pedido_processado(pedido, completo=atendido_completo)
     pausar()
-
-
-    # Atualiza estoque e fila
-    salvar_estoque(estoque)
-    salvar_fila_pedidos(fila)
-
-    # Registra o pedido como processado
-    registrar_pedido_processado(pedido, completo=atendido_completo)
-
-    pausar()
+    
 #Função que exibe o histórico de pedidos
 def visualizar_historico_pedidos():
     exibir_cabecalho()
