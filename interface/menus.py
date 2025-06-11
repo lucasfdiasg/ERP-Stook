@@ -7,7 +7,9 @@ from classes.estoque import Estoque
 from utils.exibicao import exibir_cabecalho, pausar
 from classes.pedido import Pedido
 from datetime import datetime
-from utils.exibicao import exibir_cabecalho, pausar, limpar_tela 
+from utils.exibicao import exibir_cabecalho, pausar, limpar_tela
+from datetime import datetime, timedelta
+from utils.estoque_persistencia import carregar_estoque
 import os
 
 # ------------------------------
@@ -53,6 +55,7 @@ def menu_principal():
     print("[ 5 ] Visualizar Histórico de Pedidos")
     print("[ 6 ] Visualizar Estoque")
     print("[ 7 ] Remover Engradado do Estoque")
+    print("[ 8 ] Relatórios")
     print("[ 0 ] Sair")
     return input("\nEscolha uma opção: ")
 #Opções Submenu -> Produtos
@@ -109,7 +112,24 @@ def submenu_pedidos():
             break
         else:
             print(f"\nOpção inválida. Tente novamente.")
+#Opções Submenu -> Relatório
+def menu_relatorios():
+    while True:
+        exibir_cabecalho()
+        print("|                 MENU DE RELATÓRIOS                |")
+        print("=" * 50)
+        print("[ 1 ] Produtos próximos do vencimento (30 dias)")
+        print("[ 0 ] Voltar ao menu principal")
 
+        opcao = input("\nEscolha uma opção: ").strip()
+
+        if opcao == '1':
+            exibir_produtos_vencendo()
+        elif opcao == '0':
+            break
+        else:
+            print(f"\nOpção inválida. Tente novamente.")
+        input(f"\nPressione ENTER para continuar...")
 
 
 # ------------------------------
@@ -672,6 +692,84 @@ def processar_pedido():
                 while pilha_copia and pilha_copia[-1].codigo_produto == codigo and retirados < quantidade:
                     pilha_copia.pop()
                     retirados += 1
+            if retirados == quantidade:
+                break
+
+        if retirados < quantidade:
+            pode_atender = False
+            faltantes[codigo] = quantidade - retirados
+
+    # -----------------------
+    # FASE 2: EXECUÇÃO
+    # -----------------------
+    if not pode_atender:
+        print("⚠️ Pedido não pôde ser atendido totalmente.")
+        for cod, faltam in faltantes.items():
+            print(f"❌ Faltaram {faltam} engradado(s) de {cod} no estoque.")
+        
+        # Devolve o pedido para o início da fila se não puder ser atendido
+        # (Opcional, mas boa prática. Se preferir descartar, remova as 3 linhas abaixo)
+        fila_nova = Fila()
+        fila_nova.enfileirar(pedido)
+        for p in fila._elementos:
+            fila_nova.enfileirar(p)
+        
+        salvar_fila_pedidos(fila_nova)
+        # O pedido NÃO é registrado no histórico, pois não foi processado
+        return pausar()
+
+    # Se passou na verificação, agora de fato altera o estoque real
+    for item in pedido.itens:
+        codigo = item["codigo_produto"]
+        quantidade = int(item["quantidade"])
+        restantes = quantidade
+
+        for posicao, pilha in estoque.galpao.items():
+            while not pilha.esta_vazia() and pilha.topo().codigo_produto == codigo and restantes > 0:
+                pilha.desempilhar()
+                restantes -= 1
+                print(f"✅ Retirado 1 engradado de {codigo} da posição {posicao}.")
+
+            if restantes == 0:
+                break
+
+    salvar_estoque(estoque)
+    salvar_fila_pedidos(fila) # Salva a fila sem o pedido que foi processado
+    registrar_pedido_processado(pedido, completo=True)
+    print("\n🎉 Pedido atendido COMPLETAMENTE!")
+    pausar()
+    exibir_cabecalho()
+    print("PROCESSAR PRÓXIMO PEDIDO".center(50))
+    print("=" * 50)
+
+    fila = carregar_fila_pedidos()
+    if fila.esta_vazia():
+        print("📭 Nenhum pedido na fila.")
+        return pausar()
+
+    pedido = fila.desenfileirar()
+    print(f"🧾 Pedido ID: {pedido.id_pedido} | Solicitante: {pedido.nome_solicitante}")
+    print("-" * 50)
+
+    estoque = carregar_estoque()
+
+    # -----------------------
+    # FASE 1: VERIFICAÇÃO
+    # -----------------------
+    estoque_temporario = {pos: list(pilha.pilha) for pos, pilha in estoque.galpao.items()}
+    pode_atender = True
+    faltantes = {}
+
+    for item in pedido.itens:
+        codigo = item["codigo_produto"]
+        quantidade = int(item["quantidade"])
+        retirados = 0
+
+        for posicao, pilha_copia in estoque_temporario.items():
+            if pilha_copia and pilha_copia[-1].codigo_produto == codigo:
+                while pilha_copia and pilha_copia[-1].codigo_produto == codigo and retirados < quantidade:
+                    pilha_copia.pop()
+                    retirados += 1
 
             if retirados == quantidade:
                 break
@@ -770,3 +868,62 @@ def visualizar_fila_pedidos():
         print("-" * 50)
 
     pausar()
+
+
+# ------------------------------
+# Função de criação relatórios
+# ------------------------------
+# Função que varre o estoque e coleta engradados
+def exibir_produtos_vencendo():
+    exibir_cabecalho()
+    print("RELATÓRIO: PRODUTOS PRÓXIMOS DO VENCIMENTO".center(50))
+    print("=" * 50)
+
+    estoque = carregar_estoque()
+    lista_engradados = []
+
+    for pilha in estoque.galpao.values():
+        lista_engradados.extend(pilha.pilha)
+
+    if not lista_engradados:
+        print("📦 Nenhum engradado armazenado no estoque.")
+    else:
+        print("Engradados vencendo em até 30 dias:\n")
+        verificar_validade_recursiva(lista_engradados, estoque.galpao)
+
+
+    pausar()
+# Função Recursiva
+def verificar_validade_recursiva(lista, posicoes=None):
+    if not lista:
+        return
+
+    engradado = lista[0]
+    restante = lista[1:]
+
+    try:
+        validade = datetime.strptime(engradado.validade, "%d/%m/%Y")
+        hoje = datetime.now()
+        dias_para_vencer = (validade - hoje).days
+
+        if 0 <= dias_para_vencer <= 30:
+            # Descobre onde está estocado
+            posicao = "Desconhecida"
+            if posicoes:
+                for pos, pilha in posicoes.items():
+                    if engradado in pilha.pilha:
+                        posicao = pos
+                        break
+
+            print(f"⚠️ Produto: {engradado.codigo_produto}")
+            print(f"   Lote: {engradado.lote}")
+            print(f"   Validade: {engradado.validade} ({dias_para_vencer} dia(s))")
+            print(f"   Localização: {posicao}")
+            print("-" * 50)
+    except Exception as e:
+        print(f"[ERRO] Validade inválida para engradado: {e}")
+
+    verificar_validade_recursiva(restante, posicoes)
+
+
+

@@ -11,7 +11,7 @@ from interface.menus import (
     visualizar_estoque_detalhado,
     remover_engradado_do_estoque,
     submenu_pedidos,
-    visualizar_historico_pedidos
+    visualizar_historico_pedidos, menu_relatorios
 )
 
 def executar():
@@ -34,6 +34,9 @@ def executar():
                 visualizar_estoque_detalhado()
             elif opcao == '7':
                 remover_engradado_do_estoque()
+            elif opcao == '8':
+                menu_relatorios()
+
             elif opcao == '0':
                 print("\nEncerrando o sistema... Até logo! 👋")
                 time.sleep(1)
