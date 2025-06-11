@@ -214,7 +214,7 @@ def cadastrar_produto():
                     "fabricante": campos["fabricante"],
                     "categoria": campos["categoria"]
                 }
-                if salvar_json(produtos, caminho):
+                if salvar_json(caminho, produtos):
                     print("\n✅ Produto cadastrado com sucesso!")
                 else:
                     print("\n❌ Erro ao salvar o produto.")
