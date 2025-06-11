@@ -361,7 +361,7 @@ def criar_engradado():
     preco_venda = solicitar_valor("Preço de venda")
     fornecedor = input("Fornecedor: ").strip()
 
-    engradado = Engradado(
+    engradado_obj = Engradado(
         codigo_produto=codigo,
         quantidade=quantidade,
         lote=lote,
@@ -372,22 +372,13 @@ def criar_engradado():
         fornecedor=fornecedor
     )
 
-    print(f"\n✅ Engradado criado com sucesso:\n{engradado}")
+    print(f"\n✅ Engradado criado com sucesso:\n{engradado_obj}")
     caminho = "database/engradados.json"
     engradados = carregar_json(caminho)
 
     novo_id = f"ENG{str(len(engradados) + 1).zfill(3)}"
 
-    engradados[novo_id] = {
-        "codigo_produto": codigo,
-        "quantidade": quantidade,
-        "lote": lote,
-        "validade": validade,
-        "fabricacao": fabricacao,
-        "preco_compra": preco_compra,
-        "preco_venda": preco_venda,
-        "fornecedor": fornecedor
-    }
+    engradados[novo_id] = engradado_obj.to_dict()
 
     if salvar_json(caminho, engradados):
         print(f"📦 Engradado salvo com o ID: {novo_id}")
@@ -635,34 +626,64 @@ def processar_pedido():
     print("-" * 50)
 
     estoque = carregar_estoque()
-    atendido_completo = True
+
+    # -----------------------
+    # FASE 1: VERIFICAÇÃO
+    # -----------------------
+    estoque_temporario = {pos: list(pilha.pilha) for pos, pilha in estoque.galpao.items()}
+    pode_atender = True
+    faltantes = {}
 
     for item in pedido.itens:
-        codigo_produto = item["codigo_produto"]
-        quantidade_engradados = int(item["quantidade"])
-        restantes = quantidade_engradados
+        codigo = item["codigo_produto"]
+        quantidade = int(item["quantidade"])
+        retirados = 0
 
-        print(f"🔹 Produto {codigo_produto} | Engradados solicitados: {quantidade_engradados}")
+        for posicao, pilha_copia in estoque_temporario.items():
+            if pilha_copia and pilha_copia[-1].codigo_produto == codigo:
+                while pilha_copia and pilha_copia[-1].codigo_produto == codigo and retirados < quantidade:
+                    pilha_copia.pop()
+                    retirados += 1
 
-        # Busca todas as pilhas com engradados do produto (em ordem de varredura)
-        posicoes_com_produto = [
-            pos for pos, pilha in estoque.galpao.items()
-            if not pilha.esta_vazia() and pilha.topo().codigo_produto == codigo_produto
-        ]
+            if retirados == quantidade:
+                break
 
-        for pos in posicoes_com_produto:
-            pilha = estoque.galpao[pos]
-            while not pilha.esta_vazia() and pilha.topo().codigo_produto == codigo_produto and restantes > 0:
-                engradado_removido = pilha.desempilhar()
+        if retirados < quantidade:
+            pode_atender = False
+            faltantes[codigo] = quantidade - retirados
+
+    # -----------------------
+    # FASE 2: EXECUÇÃO
+    # -----------------------
+    if not pode_atender:
+        print("⚠️ Pedido não pôde ser atendido totalmente.")
+        for cod, faltam in faltantes.items():
+            print(f"❌ Faltaram {faltam} engradado(s) de {cod} no estoque.")
+        registrar_pedido_processado(pedido, completo=False)
+        salvar_fila_pedidos(fila)  # Atualiza a fila com o pedido removido
+        return pausar()
+
+    # Se passou na verificação, agora de fato altera o estoque real
+    for item in pedido.itens:
+        codigo = item["codigo_produto"]
+        quantidade = int(item["quantidade"])
+        restantes = quantidade
+
+        for posicao, pilha in estoque.galpao.items():
+            while not pilha.esta_vazia() and pilha.topo().codigo_produto == codigo and restantes > 0:
+                pilha.desempilhar()
                 restantes -= 1
-                print(f"✅ Retirado 1 engradado de {codigo_produto} da posição {pos}.")
+                print(f"✅ Retirado 1 engradado de {codigo} da posição {posicao}.")
 
             if restantes == 0:
                 break
 
-        if restantes > 0:
-            atendido_completo = False
-            print(f"❌ Faltaram {restantes} engradado(s) de {codigo_produto} no estoque.")
+    salvar_estoque(estoque)
+    salvar_fila_pedidos(fila)
+    registrar_pedido_processado(pedido, completo=True)
+    print("\n🎉 Pedido atendido COMPLETAMENTE!")
+    pausar()
+
 
     # Atualiza estoque e fila
     salvar_estoque(estoque)
