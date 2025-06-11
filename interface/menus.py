@@ -463,39 +463,67 @@ def menu_armazenar_engradado():
 
 # Função para exibir o conteúdo do estoque
 def visualizar_estoque_detalhado():
-    exibir_cabecalho()
-    print("VISUALIZAÇÃO DO ESTOQUE".center(50))
+    exibir_cabecalho()  # Mantém o cabeçalho padrão de 50 caracteres
+
+    estoque = carregar_estoque()
+    produtos = carregar_json("database/produtos.json")
+
+    # --- Função auxiliar interna para formatar cada célula do grid ---
+    def formatar_celula(posicao, pilha_obj, largura):
+        if not pilha_obj:
+            return " " * largura
+
+        info_formatada = f"{posicao}:Vazio"
+        if not pilha_obj.esta_vazia():
+            ocupacao = len(pilha_obj.pilha)
+            barra = "▉" * ocupacao + "░" * (5 - ocupacao)
+            cod_produto = pilha_obj.topo().codigo_produto
+            info_formatada = f"{posicao}:[{barra}] {cod_produto}"
+        
+        return info_formatada.ljust(largura)
+
+    # --- Bloco 1: Colunas A e B (Laterais) ---
+    for linha in range(1, 9):
+        # A e B agora têm 16 de largura para alinhar com C, D, E
+        celula_a = formatar_celula(f"A{linha}", estoque.galpao.get(f"A{linha}"), 16)
+        celula_b = formatar_celula(f"B{linha}", estoque.galpao.get(f"B{linha}"), 16)
+        
+        # O espaço central foi calculado para alinhar B com E (18 espaços)
+        print(f"{celula_a}{' ' * 18}{celula_b}")
+
+    # --- Corredor Principal ---
+    print("=" * 50)
+    print("||".center(50))
     print("=" * 50)
 
-    estoque = carregar_estoque()  # Carrega o estado atual do estoque
-    produtos = carregar_json("database/produtos.json") # Carrega os dados dos produtos para consulta
-
-    # Itera sobre o layout do galpão (8 linhas x 5 colunas)
-    for coluna in "ABCDE":
-        print("-" * 50)
-        print(f"COLUNA {coluna}".center(50))
-        for linha in range(1, 9):
-            posicao = f"{coluna}{linha}"
-            pilha_obj = estoque.galpao.get(posicao)
-
-            if not pilha_obj:
-                print(f"| {posicao}: Posição Inválida")
-                continue
-
-            ocupacao = len(pilha_obj.pilha)
-            barra_visual = "▉" * ocupacao + "░" * (5 - ocupacao)
-
-            info_produto = "Vazio"
-            if not pilha_obj.esta_vazia():
-                topo = pilha_obj.topo()
-                cod_produto = topo.codigo_produto
-                nome_produto = produtos.get(cod_produto, {}).get("nome", "Desconhecido")
-                info_produto = f"{nome_produto} ({cod_produto})"
-
-            print(f"| {posicao}: [{barra_visual}] {ocupacao}/5 | {info_produto}")
+    # --- Bloco 2: Colunas C, D e E (Central) ---
+    for linha in range(1, 9):
+        celula_c = formatar_celula(f"C{linha}", estoque.galpao.get(f"C{linha}"), 16)
+        celula_d = formatar_celula(f"D{linha}", estoque.galpao.get(f"D{linha}"), 16)
+        celula_e = formatar_celula(f"E{linha}", estoque.galpao.get(f"E{linha}"), 16)
+        
+        print(f"{celula_c}{celula_d}{celula_e}")
+    
     print("-" * 50)
-    pausar()
 
+    # --- Legenda (Formatada para o limite de 50 caracteres) ---
+    print("\nLEGENDA DE PRODUTOS NO ESTOQUE:")
+    produtos_em_estoque = {}
+    for pos, pilha in estoque.galpao.items():
+        if not pilha.esta_vazia():
+            topo = pilha.topo()
+            if topo.codigo_produto not in produtos_em_estoque:
+                nome = produtos.get(topo.codigo_produto, {}).get("nome", "Desconhecido")
+                produtos_em_estoque[topo.codigo_produto] = nome
+    
+    if not produtos_em_estoque:
+        print("Nenhum produto encontrado no estoque.")
+    else:
+        for codigo, nome in produtos_em_estoque.items():
+            legenda_item = f"- {codigo}: {nome}"
+            print(legenda_item[:50])
+
+    pausar()
 
 # ------------------------------
 # Função de criação pedidos

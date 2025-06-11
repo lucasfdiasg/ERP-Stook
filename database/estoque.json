@@ -1,5 +1,16 @@
 {
-    "A1": [],
+    "A1": [
+        {
+            "codigo_produto": "15447",
+            "quantidade": 170,
+            "lote": "1136",
+            "validade": "02/07/2025",
+            "fabricacao": "02/07/2020",
+            "preco_compra": "R$ 50,00",
+            "preco_venda": "R$ 75,00",
+            "fornecedor": "Drinks CIA"
+        }
+    ],
     "A2": [],
     "A3": [],
     "A4": [],

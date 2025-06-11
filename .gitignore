@@ -1,0 +1,13 @@
+classes/__pycache__/categorias.cpython-312.pyc
+classes/__pycache__/engradado.cpython-312.pyc
+classes/__pycache__/espaco_armazenamento.cpython-312.pyc
+classes/__pycache__/estoque.cpython-312.pyc
+classes/__pycache__/pedido.cpython-312.pyc
+interface/__pycache__/__init__.cpython-312.pyc
+interface/__pycache__/menus.cpython-312.pyc
+utils/__pycache__/__init__.cpython-312.pyc
+utils/__pycache__/estoque_persistencia.cpython-312.pyc
+utils/__pycache__/exibicao.cpython-312.pyc
+utils/__pycache__/fila.cpython-312.pyc
+utils/__pycache__/manipulador_json.cpython-312.pyc
+utils/__pycache__/pedidos_persistencia.cpython-312.pyc
