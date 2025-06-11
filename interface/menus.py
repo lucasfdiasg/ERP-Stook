@@ -30,7 +30,7 @@ def solicitar_data(campo):
         try:
             return datetime.strptime(data, "%d/%m/%Y").strftime("%d/%m/%Y")
         except ValueError:
-            print(f"[!] {campo} inválida. Tente novamente.")
+            print(f"🚨 {campo} inválida. Tente novamente.")
 #Função para solicitar valor monetário no padrão R$
 def solicitar_valor(campo):
     while True:
@@ -40,7 +40,7 @@ def solicitar_valor(campo):
             valor_formatado = f"R$ {valor_float:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
             return valor_formatado
         except ValueError:
-            print(f"[!] {campo} inválido. Tente novamente.")
+            print(f"🚨 {campo} inválido. Tente novamente.")
 
 
 # ------------------------------
@@ -57,7 +57,7 @@ def menu_principal():
     print("[ 7 ] Remover Engradado do Estoque")
     print("[ 8 ] Relatórios")
     print("[ 0 ] Sair")
-    return input("\nEscolha uma opção: ")
+    return input("\nEscolha uma opção acima\n\n>>> ")
 #Opções Submenu -> Produtos
 def submenu_produtos():
     while True:
@@ -71,7 +71,7 @@ def submenu_produtos():
         print("[ 5 ] Gerenciar categorias")
         print("[ 0 ] Voltar ao menu principal")
 
-        opcao = input("\nEscolha uma opção: ")
+        opcao = input("\nEscolha uma opção acima\n\n>>> ")
 
         if opcao == '1':
             cadastrar_produto()
@@ -87,7 +87,7 @@ def submenu_produtos():
             break
         else:
             print(f"\nOpção inválida. Tente novamente.")
-        input(f"\nPressione ENTER para continuar...")
+            input(f"\nPressione ENTER\n\n>>>")
 #Opções Submenu -> Pedidos
 def submenu_pedidos():
     while True:
@@ -99,7 +99,7 @@ def submenu_pedidos():
         print("[ 3 ] Visualizar Fila de Pedidos")
         print("[ 0 ] Voltar ao menu principal")
 
-        opcao = input("\nEscolha uma opção: ")
+        opcao = input("\nEscolha uma opção acima\n\n>>> ")
 
         if opcao == '1':
             registrar_novo_pedido()
@@ -112,6 +112,7 @@ def submenu_pedidos():
             break
         else:
             print(f"\nOpção inválida. Tente novamente.")
+            input(f"\nPressione ENTER\n\n>>>")
 #Opções Submenu -> Relatório
 def menu_relatorios():
     while True:
@@ -129,7 +130,7 @@ def menu_relatorios():
             break
         else:
             print(f"\nOpção inválida. Tente novamente.")
-        input(f"\nPressione ENTER para continuar...")
+            input(f"\nPressione ENTER\n\n>>>")
 
 
 # ------------------------------
@@ -160,6 +161,7 @@ def listar_produtos():
         for codigo, info in lista:
             peso_formatado = formatar_peso(info["peso"])
             print(f"- {codigo} - {info['nome']} ({peso_formatado})")
+    input(f"\nPressione ENTER para RETORNAR\n\n>>>")
 # Função para cadastrar novo produto
 def cadastrar_produto():
     exibir_cabecalho()
@@ -193,8 +195,8 @@ def cadastrar_produto():
                 campos[campo] = entrada
                 break
             else:
-                print(f"[!] O campo '{campo}' não pode ficar vazio.")
-                input("Pressione ENTER para tentar novamente...")
+                print(f"🚨 O campo '{campo}' não pode ficar vazio.")
+                (f"\nPressione ENTER\n\n>>>")
 
     # Escolha da categoria via enum-like
     chaves = list(categorias.keys())
@@ -238,11 +240,11 @@ def cadastrar_produto():
                     print("\n✅ Produto cadastrado com sucesso!")
                 else:
                     print("\n❌ Erro ao salvar o produto.")
-                input("\nPressione ENTER para voltar ao menu...")
+                input(f"\nPressione ENTER para RETORNAR\n\n>>>")
                 return
             elif opcao == 2:
                 print("\n❌ Cadastro cancelado pelo usuário.")
-                input("\nPressione ENTER para voltar ao menu...")
+                input(f"\nPressione ENTER para RETORNAR\n\n>>>")
                 return
             else:
                 print("[!] Opção inválida. Digite 1 ou 2.")
@@ -258,11 +260,12 @@ def atualizar_produto():
         print("⚠️ Nenhum produto cadastrado.")
         return
 
-    print("=== Produtos Cadastrados ===")
+    print(f"=== Produtos Cadastrados ===\n")
     for codigo, info in produtos.items():
         print(f"{codigo} - {info['nome']}")
 
-    codigo = input("\nDigite o código do produto a atualizar: ").strip()
+    codigo = input(f"\nDigite o código do produto a atualizar\
+                   \nOu ENTER para RETORNAR\n\n>>>").strip()
     if codigo not in produtos:
         print("[!] Produto não encontrado.")
         return
@@ -313,9 +316,10 @@ def remover_produto():
     for codigo, info in produtos.items():
         print(f"{codigo} - {info['nome']}")
 
-    codigo = input("\nDigite o código do produto a remover: ").strip()
+    codigo = input(F"\nDigite o código do produto a remover\
+                   \nou ENTER para RETORNAR\n\n>>>").strip()
     if codigo not in produtos:
-        print("[!] Produto não encontrado.")
+        print("🚨 Produto não encontrado.")
         return
 
     print("\nInformações do produto selecionado:")
@@ -336,9 +340,9 @@ def remover_produto():
                 print("\n❌ Remoção cancelada.")
                 break
             else:
-                print("[!] Opção inválida. Digite 1 ou 2.")
+                print("🚨 Opção inválida. Digite 1 ou 2.")
         except ValueError:
-            print("[!] Entrada inválida. Digite apenas 1 ou 2.")
+            print("🚨 Entrada inválida. Digite apenas 1 ou 2.")
 
     # (Mesma estrutura com listagem, input e confirmação de exclusão)
     pass
@@ -363,7 +367,7 @@ def criar_engradado():
 
     codigo = input("\nCódigo do produto: ").strip()
     if codigo not in produtos:
-        print("[!] Produto não encontrado.")
+        print("🚨 Produto não encontrado.")
         return
 
     try:
@@ -371,7 +375,7 @@ def criar_engradado():
         if quantidade <= 0:
             raise ValueError
     except ValueError:
-        print("[!] Quantidade inválida.")
+        print("🚨 Quantidade inválida.")
         return
 
     lote = input("Lote: ").strip()
@@ -421,9 +425,14 @@ def menu_armazenar_engradado():
     # Exibe os engradados disponíveis para seleção
     print(f"\nEngradados disponíveis:\n")
     ids_engradados = list(engradados_dict.keys())
+    produtos = carregar_json("database/produtos.json")  # carrega nomes dos produtos
+
     for idx, eng_id in enumerate(ids_engradados, 1):
         eng = engradados_dict[eng_id]
-        print(f"[{idx}] ID: {eng_id} | Produto: {eng['codigo_produto']} | Lote: {eng['lote']}")
+        codigo = eng['codigo_produto']
+        nome = produtos.get(codigo, {}).get("nome", "Desconhecido")
+        print(f"[{idx}] {nome} | Produto: {codigo} | Lote: {eng['lote']}")
+
 
     # Seleção do engradado pelo usuário
     try:
@@ -431,7 +440,7 @@ def menu_armazenar_engradado():
         if not (1 <= escolha <= len(ids_engradados)):
             raise ValueError("Número fora do intervalo.")
     except ValueError:
-        print("[!] Entrada inválida.")
+        print("🚨 Entrada inválida.")
         pausar()
         return
 
@@ -454,14 +463,14 @@ def menu_armazenar_engradado():
             posicoes_validas.append(posicao)
     
     if not posicoes_validas:
-        print("\n[!] Não há nenhuma posição disponível para este tipo de produto no momento.")
+        print("\n🚨 Não há nenhuma posição disponível para este tipo de produto no momento.")
         pausar()
         return
 
     # Solicita o destino e armazena
     destino = input("\nDigite o endereço onde deseja armazenar (ex: B3): ").strip().upper()
     if destino not in posicoes_validas:
-        print("[!] Endereço inválido ou não disponível para este produto.")
+        print("🚨 Endereço inválido ou não disponível para este produto.")
         pausar()
         return
 
@@ -563,7 +572,7 @@ def registrar_novo_pedido():
 
     nome_solicitante = input("Nome do solicitante: ").strip()
     if not nome_solicitante:
-        print("[!] O nome do solicitante é obrigatório.")
+        print("🚨 O nome do solicitante é obrigatório.")
         return pausar()
 
     # Identificar os produtos com engradados disponíveis no estoque
@@ -592,7 +601,7 @@ def registrar_novo_pedido():
             break
 
         if codigo_produto not in produtos_disponiveis:
-            print("[!] Produto não disponível no estoque.")
+            print("🚨 Produto não disponível no estoque.")
             continue
 
         try:
@@ -600,7 +609,7 @@ def registrar_novo_pedido():
             if quantidade <= 0:
                 raise ValueError
         except ValueError:
-            print("[!] Quantidade inválida.")
+            print("🚨 Quantidade inválida.")
             continue
 
         if novo_pedido.adicionar_item(codigo_produto, quantidade):
@@ -615,7 +624,7 @@ def registrar_novo_pedido():
         if salvar_fila_pedidos(fila_pedidos):
             print(f"\n✅ Pedido {novo_id} registrado com sucesso!")
         else:
-            print("\n[!] Erro ao salvar o pedido.")
+            print("\n🚨 Erro ao salvar o pedido.")
 
     pausar()
 
@@ -634,13 +643,13 @@ def remover_engradado_do_estoque():
 
     # Validação 1: A posição existe no galpão?
     if posicao not in estoque.galpao:
-        print("\n[!] Posição inválida.")
+        print("\n🚨 Posição inválida.")
         pausar()
         return
 
     # Validação 2: A pilha na posição não está vazia?
     if estoque.galpao[posicao].esta_vazia():
-        print(f"\n[!] Não há engradados na posição {posicao}.")
+        print(f"\n🚨 Não há engradados na posição {posicao}.")
         pausar()
         return
 
@@ -653,9 +662,9 @@ def remover_engradado_do_estoque():
             print(f"\n✅ Engradado removido com sucesso da posição {posicao}.")
             print(f"   Produto: {engradado_removido.codigo_produto} | Lote: {engradado_removido.lote}")
         else:
-            print("\n[!] Erro ao salvar o estado do estoque após a remoção.")
+            print("\n🚨 Erro ao salvar o estado do estoque após a remoção.")
     else:
-        print("\n[!] Falha ao remover o engradado.")
+        print("\n🚨 Falha ao remover o engradado.")
 
     pausar()
 # Função que processa os pedidos

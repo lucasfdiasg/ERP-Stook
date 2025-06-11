@@ -46,7 +46,7 @@ def executar():
         except Exception as e:
             print(f"\n[ERRO] Ocorreu um erro inesperado: {e}")
             traceback.print_exc()
-        pausar()
+            pausar()
 
 if __name__ == "__main__":
     executar()

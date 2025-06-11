@@ -1,1 +1,32 @@
-{}
+{
+    "ENG001": {
+        "codigo_produto": "15215",
+        "quantidade": 150,
+        "lote": "1188",
+        "validade": "22/09/2025",
+        "fabricacao": "23/04/2024",
+        "preco_compra": "R$ 5,00",
+        "preco_venda": "R$ 9,00",
+        "fornecedor": "Drinks"
+    },
+    "ENG002": {
+        "codigo_produto": "15464",
+        "quantidade": 200,
+        "lote": "1178",
+        "validade": "22/05/2025",
+        "fabricacao": "22/06/2022",
+        "preco_compra": "R$ 8,00",
+        "preco_venda": "R$ 12,00",
+        "fornecedor": "Drinks"
+    },
+    "ENG003": {
+        "codigo_produto": "15487",
+        "quantidade": 120,
+        "lote": "1145",
+        "validade": "22/08/2025",
+        "fabricacao": "22/02/2022",
+        "preco_compra": "R$ 7,00",
+        "preco_venda": "R$ 10,00",
+        "fornecedor": "Drinks"
+    }
+}
