@@ -16,7 +16,6 @@ import os
 # ------------------------------
 # Funções auxiliares
 # ------------------------------
-#Funçao para limpar terminal
 #Função para formatar o peso para kg
 def formatar_peso(peso_raw):
     try:

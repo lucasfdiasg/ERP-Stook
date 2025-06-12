@@ -52,5 +52,11 @@
         "peso": "0,950",
         "fabricante": "Muller",
         "categoria": "destilados"
+    },
+    "15664": {
+        "nome": "Aurora Suco Integral 1,5l",
+        "peso": "2,3",
+        "fabricante": "Aurora Vinhos",
+        "categoria": "sucos"
     }
 }
