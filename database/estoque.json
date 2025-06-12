@@ -11,7 +11,38 @@
             "fornecedor": "Drinks CIA"
         }
     ],
-    "A2": [],
+    "A2": [
+        {
+            "codigo_produto": "15487",
+            "quantidade": 200,
+            "lote": "1135",
+            "validade": "22/06/2024",
+            "fabricacao": "22/02/2020",
+            "preco_compra": "R$ 2,00",
+            "preco_venda": "R$ 5,00",
+            "fornecedor": "15"
+        },
+        {
+            "codigo_produto": "15487",
+            "quantidade": 200,
+            "lote": "15664",
+            "validade": "22/05/2027",
+            "fabricacao": "22/05/2024",
+            "preco_compra": "R$ 5,50",
+            "preco_venda": "R$ 8,20",
+            "fornecedor": "Drinks"
+        },
+        {
+            "codigo_produto": "15487",
+            "quantidade": 200,
+            "lote": "1187",
+            "validade": "22/05/2026",
+            "fabricacao": "22/04/2024",
+            "preco_compra": "R$ 5,00",
+            "preco_venda": "R$ 8,00",
+            "fornecedor": "Drinks"
+        }
+    ],
     "A3": [],
     "A4": [],
     "A5": [],
@@ -20,7 +51,18 @@
     "A8": [],
     "B1": [],
     "B2": [],
-    "B3": [],
+    "B3": [
+        {
+            "codigo_produto": "1522",
+            "quantidade": 200,
+            "lote": "1233",
+            "validade": "22/06/2025",
+            "fabricacao": "22/02/2024",
+            "preco_compra": "R$ 3,20",
+            "preco_venda": "R$ 10,00",
+            "fornecedor": "DrinksTRanportes"
+        }
+    ],
     "B4": [],
     "B5": [],
     "B6": [],

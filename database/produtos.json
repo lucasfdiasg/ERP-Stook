@@ -40,5 +40,17 @@
         "peso": "0,950",
         "fabricante": "Bombay",
         "categoria": "destilados"
+    },
+    "1522": {
+        "nome": "Redbull",
+        "peso": "0,480",
+        "fabricante": "Redbull",
+        "categoria": "energeticos"
+    },
+    "11564": {
+        "nome": "51",
+        "peso": "0,950",
+        "fabricante": "Muller",
+        "categoria": "destilados"
     }
 }

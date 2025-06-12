@@ -10,6 +10,7 @@ from datetime import datetime
 from utils.exibicao import exibir_cabecalho, pausar, limpar_tela
 from datetime import datetime, timedelta
 from utils.estoque_persistencia import carregar_estoque
+from utils.fila import Fila
 import os
 
 # ------------------------------
@@ -117,19 +118,22 @@ def submenu_pedidos():
 def menu_relatorios():
     while True:
         exibir_cabecalho()
-        print("|                 MENU DE RELATÓRIOS                |")
+        print("|                MENU DE RELATÓRIOS               |")
         print("=" * 50)
         print("[ 1 ] Produtos próximos do vencimento (30 dias)")
+        print("[ 2 ] Itens em falta para pedidos pendentes") # <-- NOVA OPÇÃO
         print("[ 0 ] Voltar ao menu principal")
 
         opcao = input("\nEscolha uma opção: ").strip()
 
         if opcao == '1':
             exibir_produtos_vencendo()
+        elif opcao == '2':
+            relatorio_itens_em_falta() # <-- CHAMA A NOVA FUNÇÃO
         elif opcao == '0':
             break
         else:
-            print(f"\nOpção inválida. Tente novamente.")
+            print(f"\n🚨 Opção inválida. Tente novamente.")
             input(f"\nPressione ENTER\n\n>>>")
 
 
@@ -255,6 +259,7 @@ def atualizar_produto():
     exibir_cabecalho()
     caminho = "database/produtos.json"
     produtos = carregar_json(caminho)
+    categorias = carregar_categorias()  # Carrega as categorias aqui
 
     if not produtos:
         print("⚠️ Nenhum produto cadastrado.")
@@ -264,33 +269,62 @@ def atualizar_produto():
     for codigo, info in produtos.items():
         print(f"{codigo} - {info['nome']}")
 
-    codigo = input(f"\nDigite o código do produto a atualizar\
-                   \nOu ENTER para RETORNAR\n\n>>>").strip()
-    if codigo not in produtos:
-        print("[!] Produto não encontrado.")
+    codigo = input(f"\nDigite o código do produto a atualizar"
+                   f"\nOu ENTER para RETORNAR\n\n>>> ").strip()
+    
+    if not codigo:
         return
 
-    print("Deixe em branco para manter o valor atual.")
+    if codigo not in produtos:
+        print("🚨 Produto não encontrado.")
+        return
 
-    nome = input(f"Nome [{produtos[codigo]['nome']}]: ").strip()
-    peso = input(f"Peso [{produtos[codigo]['peso']}]: ").strip()
-    fabricante = input(f"Fabricante [{produtos[codigo]['fabricante']}]: ").strip()
-    categoria = input(f"Categoria [{produtos[codigo]['categoria']}]: ").strip()
+    print("\nDeixe o campo em branco para manter o valor atual.")
 
-    if nome:
-        produtos[codigo]['nome'] = nome
-    if peso:
-        produtos[codigo]['peso'] = peso
-    if fabricante:
-        produtos[codigo]['fabricante'] = fabricante
-    if categoria:
-        produtos[codigo]['categoria'] = categoria
+    produto_atual = produtos[codigo]
+    nome = input(f"Nome [{produto_atual['nome']}]: ").strip()
+    peso = input(f"Peso [{produto_atual['peso']}]: ").strip()
+    fabricante = input(f"Fabricante [{produto_atual['fabricante']}]: ").strip()
+    
+    nova_categoria_chave = None
+    print("\nSelecione a nova categoria:")
+    chaves_cat = list(categorias.keys())
+    for i, chave in enumerate(chaves_cat, 1):
+        nome_cat = categorias[chave]
+        marcador = " (Atual)" if chave == produto_atual['categoria'] else ""
+        print(f"[{i}] {nome_cat}{marcador}")
 
     while True:
         try:
+            escolha_str = input(f"\nEscolha a nova categoria (ou ENTER para manter): ").strip()
+            if not escolha_str:
+                break  # Mantém a categoria atual se o usuário pressionar ENTER
+
+            escolha = int(escolha_str)
+            if 1 <= escolha <= len(chaves_cat):
+                nova_categoria_chave = chaves_cat[escolha - 1]
+                break
+            else:
+                print("🚨 Número fora do intervalo.")
+        except ValueError:
+            print("🚨 Entrada inválida. Digite um número válido.")
+    if nome:
+        produto_atual['nome'] = nome
+    if peso:
+        produto_atual['peso'] = peso
+    if fabricante:
+        produto_atual['fabricante'] = fabricante
+    if nova_categoria_chave:
+        produto_atual['categoria'] = nova_categoria_chave
+    while True:
+        try:
+            print("\nProduto atualizado para:")
+            for k, v in produto_atual.items():
+                print(f"- {k.capitalize()}: {v}")
+
             confirmacao = int(input("\nDeseja salvar as alterações?\n[ 1 ] Sim     [ 2 ] Não\n> "))
             if confirmacao == 1:
-                if salvar_json(produtos, caminho):
+                if salvar_json(caminho, produtos):
                     print("\n✅ Produto atualizado com sucesso!")
                 else:
                     print("\n❌ Erro ao salvar o produto.")
@@ -299,9 +333,11 @@ def atualizar_produto():
                 print("\n❌ Alterações canceladas.")
                 break
             else:
-                print("[!] Opção inválida. Digite 1 ou 2.")
+                print("🚨 Opção inválida. Digite 1 ou 2.")
         except ValueError:
-            print("[!] Entrada inválida. Digite apenas 1 ou 2.")
+            print("🚨 Entrada inválida. Digite apenas 1 ou 2.")
+    
+    input(f"\nPressione ENTER para RETORNAR\n\n>>>")
 # Função para remover produtos cadastrados
 def remover_produto():
     exibir_cabecalho()
@@ -627,7 +663,6 @@ def registrar_novo_pedido():
             print("\n🚨 Erro ao salvar o pedido.")
 
     pausar()
-
 #Função que remove um engradado do estoque
 def remover_engradado_do_estoque():
     """
@@ -684,9 +719,7 @@ def processar_pedido():
 
     estoque = carregar_estoque()
 
-    # -----------------------
     # FASE 1: VERIFICAÇÃO
-    # -----------------------
     estoque_temporario = {pos: list(pilha.pilha) for pos, pilha in estoque.galpao.items()}
     pode_atender = True
     faltantes = {}
@@ -697,8 +730,9 @@ def processar_pedido():
         retirados = 0
 
         for posicao, pilha_copia in estoque_temporario.items():
+            # A verificação 'pilha_copia and pilha_copia[-1].codigo_produto == codigo' garante que não tentemos acessar o topo de uma lista vazia.
             if pilha_copia and pilha_copia[-1].codigo_produto == codigo:
-                while pilha_copia and pilha_copia[-1].codigo_produto == codigo and retirados < quantidade:
+                while pilha_copia and retirados < quantidade:
                     pilha_copia.pop()
                     retirados += 1
             if retirados == quantidade:
@@ -708,128 +742,41 @@ def processar_pedido():
             pode_atender = False
             faltantes[codigo] = quantidade - retirados
 
-    # -----------------------
     # FASE 2: EXECUÇÃO
-    # -----------------------
     if not pode_atender:
-        print("⚠️ Pedido não pôde ser atendido totalmente.")
+        print("⚠️  Pedido não pôde ser atendido totalmente por falta de estoque.")
         for cod, faltam in faltantes.items():
-            print(f"❌ Faltaram {faltam} engradado(s) de {cod} no estoque.")
+            print(f"    ❌ Faltaram {faltam} engradado(s) do produto {cod}.")
         
-        # Devolve o pedido para o início da fila se não puder ser atendido
-        # (Opcional, mas boa prática. Se preferir descartar, remova as 3 linhas abaixo)
+        print("\nDevolvendo o pedido para o início da fila...")
+        
+        # Lógica para devolver o pedido à fila
         fila_nova = Fila()
-        fila_nova.enfileirar(pedido)
-        for p in fila._elementos:
+        fila_nova.enfileirar(pedido)  # Coloca o pedido que falhou de volta na frente
+        for p in fila._elementos:     # Adiciona o resto da fila antiga atrás dele
             fila_nova.enfileirar(p)
         
         salvar_fila_pedidos(fila_nova)
-        # O pedido NÃO é registrado no histórico, pois não foi processado
         return pausar()
 
-    # Se passou na verificação, agora de fato altera o estoque real
+    # Se passou na verificação, executa a remoção do estoque real
     for item in pedido.itens:
         codigo = item["codigo_produto"]
         quantidade = int(item["quantidade"])
         restantes = quantidade
 
         for posicao, pilha in estoque.galpao.items():
+            if restantes == 0:
+                break
             while not pilha.esta_vazia() and pilha.topo().codigo_produto == codigo and restantes > 0:
                 pilha.desempilhar()
                 restantes -= 1
-                print(f"✅ Retirado 1 engradado de {codigo} da posição {posicao}.")
-
-            if restantes == 0:
-                break
-
-    salvar_estoque(estoque)
-    salvar_fila_pedidos(fila) # Salva a fila sem o pedido que foi processado
-    registrar_pedido_processado(pedido, completo=True)
+                print(f"    ✅ Retirado 1 engradado de {codigo} da posição {posicao}.")
+    
     print("\n🎉 Pedido atendido COMPLETAMENTE!")
-    pausar()
-    exibir_cabecalho()
-    print("PROCESSAR PRÓXIMO PEDIDO".center(50))
-    print("=" * 50)
-
-    fila = carregar_fila_pedidos()
-    if fila.esta_vazia():
-        print("📭 Nenhum pedido na fila.")
-        return pausar()
-
-    pedido = fila.desenfileirar()
-    print(f"🧾 Pedido ID: {pedido.id_pedido} | Solicitante: {pedido.nome_solicitante}")
-    print("-" * 50)
-
-    estoque = carregar_estoque()
-
-    # -----------------------
-    # FASE 1: VERIFICAÇÃO
-    # -----------------------
-    estoque_temporario = {pos: list(pilha.pilha) for pos, pilha in estoque.galpao.items()}
-    pode_atender = True
-    faltantes = {}
-
-    for item in pedido.itens:
-        codigo = item["codigo_produto"]
-        quantidade = int(item["quantidade"])
-        retirados = 0
-
-        for posicao, pilha_copia in estoque_temporario.items():
-            if pilha_copia and pilha_copia[-1].codigo_produto == codigo:
-                while pilha_copia and pilha_copia[-1].codigo_produto == codigo and retirados < quantidade:
-                    pilha_copia.pop()
-                    retirados += 1
-
-            if retirados == quantidade:
-                break
-
-        if retirados < quantidade:
-            pode_atender = False
-            faltantes[codigo] = quantidade - retirados
-
-    # -----------------------
-    # FASE 2: EXECUÇÃO
-    # -----------------------
-    if not pode_atender:
-        print("⚠️ Pedido não pôde ser atendido totalmente.")
-        for cod, faltam in faltantes.items():
-            print(f"❌ Faltaram {faltam} engradado(s) de {cod} no estoque.")
-        registrar_pedido_processado(pedido, completo=False)
-        salvar_fila_pedidos(fila)  # Atualiza a fila com o pedido removido
-        return pausar()
-
-    # Se passou na verificação, agora de fato altera o estoque real
-    for item in pedido.itens:
-        codigo = item["codigo_produto"]
-        quantidade = int(item["quantidade"])
-        restantes = quantidade
-
-        for posicao, pilha in estoque.galpao.items():
-            while not pilha.esta_vazia() and pilha.topo().codigo_produto == codigo and restantes > 0:
-                pilha.desempilhar()
-                restantes -= 1
-                print(f"✅ Retirado 1 engradado de {codigo} da posição {posicao}.")
-
-            if restantes == 0:
-                break
-
     salvar_estoque(estoque)
-    salvar_fila_pedidos(fila)
+    salvar_fila_pedidos(fila)  # Salva a fila já sem o pedido processado
     registrar_pedido_processado(pedido, completo=True)
-    print("\n🎉 Pedido atendido COMPLETAMENTE!")
-    pausar()
-
-
-    # Atualiza estoque e fila
-    salvar_estoque(estoque)
-    salvar_fila_pedidos(fila)
-
-    if atendido_completo:
-        print("\n🎉 Pedido atendido COMPLETAMENTE!")
-    else:
-        print("\n⚠️ Pedido atendido PARCIALMENTE.")
-
-    registrar_pedido_processado(pedido, completo=atendido_completo)
     pausar()
     
 #Função que exibe o histórico de pedidos
@@ -933,6 +880,69 @@ def verificar_validade_recursiva(lista, posicoes=None):
         print(f"[ERRO] Validade inválida para engradado: {e}")
 
     verificar_validade_recursiva(restante, posicoes)
+# Função que verifica a falta no estoque de produtos em pedidos ainda não atendidos
+def relatorio_itens_em_falta():
+    """Prepara os dados e inicia a verificação recursiva de pedidos pendentes."""
+    exibir_cabecalho()
+    print("RELATÓRIO: ITENS EM FALTA PARA PEDIDOS".center(50))
+    print("=" * 50)
 
+    fila_pedidos = carregar_fila_pedidos()
+    estoque = carregar_estoque()
+    produtos = carregar_json("database/produtos.json") # Carrega os produtos aqui
 
+    if fila_pedidos.esta_vazia():
+        print("✅ Nenhum pedido pendente na fila.")
+    else:
+        # Passa a lista de produtos para a função recursiva
+        encontrados = verificar_disponibilidade_recursivo(list(fila_pedidos._elementos), estoque, produtos)
+        if not encontrados:
+            print("✅ Todos os pedidos na fila podem ser atendidos com o estoque atual.")
+
+    pausar()
+# Função auxiliar de relatório de itens em falta para verificar disponibilidade de pedido no estoque
+def verificar_disponibilidade_recursivo(pedidos, estoque, produtos):
+    # Caso Base
+    if not pedidos:
+        return False
+
+    # Passo Recursivo
+    pedido_atual = pedidos[0]
+    pedidos_restantes = pedidos[1:]
+    
+    pendencia_encontrada_neste_passo = False
+
+    estoque_simulado = {pos: len(pilha.pilha) for pos, pilha in estoque.galpao.items()}
+    pode_atender = True
+    itens_faltantes = []
+
+    for item in pedido_atual.itens:
+        cod = item["codigo_produto"]
+        qtd_pedida = item["quantidade"]
+        
+        qtd_em_estoque = sum(
+            len(pilha.pilha)
+            for pos, pilha in estoque.galpao.items() 
+            if not pilha.esta_vazia() and pilha.topo().codigo_produto == cod
+        )
+
+        if qtd_em_estoque < qtd_pedida:
+            pode_atender = False
+            # --- MUDANÇA AQUI ---
+            # Busca o nome do produto para uma mensagem mais clara
+            nome_produto = produtos.get(cod, {}).get("nome", "Produto Desconhecido")
+            faltam = qtd_pedida - qtd_em_estoque
+            itens_faltantes.append(f"{faltam} de {cod} ({nome_produto})")
+
+    if not pode_atender:
+        print(f"🚨 Pedido {pedido_atual.id_pedido} ({pedido_atual.nome_solicitante}) não pode ser atendido:")
+        for faltante in itens_faltantes:
+            print(f"   - Falta(m) {faltante}")
+        print("-" * 50)
+        pendencia_encontrada_neste_passo = True
+
+    # Chama a si mesma, passando a lista de produtos junto
+    pendencia_encontrada_no_resto = verificar_disponibilidade_recursivo(pedidos_restantes, estoque, produtos)
+    
+    return pendencia_encontrada_neste_passo or pendencia_encontrada_no_resto
 

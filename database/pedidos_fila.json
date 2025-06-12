@@ -1,1 +1,13 @@
-[]
+[
+    {
+        "id_pedido": "PED001",
+        "nome_solicitante": "Pedro Valença",
+        "data_solicitacao": "11/06/2025 21:15:25",
+        "itens": [
+            {
+                "codigo_produto": "1522",
+                "quantidade": 2
+            }
+        ]
+    }
+]

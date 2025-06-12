@@ -6,12 +6,7 @@ from utils.manipulador_json import carregar_json, salvar_json
 # Caminho padrão do arquivo onde a fila de pedidos é armazenada
 CAMINHO_PEDIDOS = "database/pedidos_fila.json"
 
-# =======================================================
 # Função para carregar os pedidos da fila
-# -------------------------------------------------------
-# Retorna:
-# - Uma instância de Fila com objetos Pedido reconstruídos a partir do JSON
-# =======================================================
 def carregar_fila_pedidos():
     """Carrega a lista de pedidos do JSON e a reconstrói como uma Fila."""
     fila = Fila()
@@ -37,14 +32,7 @@ def carregar_fila_pedidos():
 
     return fila
 
-# =======================================================
 # Função para salvar a fila de pedidos no arquivo JSON
-# -------------------------------------------------------
-# Parâmetro:
-# - fila: instância da classe Fila contendo objetos Pedido
-# Retorna:
-# - True se salvou com sucesso, False se houve erro
-# =======================================================
 def salvar_fila_pedidos(fila):
     """Converte a Fila de Pedidos para uma lista de dicionários e salva em JSON."""
     lista_para_salvar = []
@@ -61,15 +49,7 @@ def salvar_fila_pedidos(fila):
     except Exception as e:
         print(f"[ERRO] Falha ao salvar a fila de pedidos: {e}")
         return False
-
-# =======================================================
 # Função para registrar um pedido processado no histórico
-# -------------------------------------------------------
-# Parâmetros:
-# - pedido: instância da classe Pedido
-# - completo: booleano indicando se foi totalmente atendido
-# A informação vai para: database/historico_pedidos.json
-# =======================================================
 def registrar_pedido_processado(pedido, completo=True):
     caminho = "database/historico_pedidos.json"
 

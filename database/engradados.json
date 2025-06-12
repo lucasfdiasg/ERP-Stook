@@ -28,5 +28,15 @@
         "preco_compra": "R$ 7,00",
         "preco_venda": "R$ 10,00",
         "fornecedor": "Drinks"
+    },
+    "ENG004": {
+        "codigo_produto": "1522",
+        "quantidade": 1222,
+        "lote": "1232",
+        "validade": "22/05/2024",
+        "fabricacao": "22/05/2025",
+        "preco_compra": "R$ 2,00",
+        "preco_venda": "R$ 12,00",
+        "fornecedor": "Drinks"
     }
 }
