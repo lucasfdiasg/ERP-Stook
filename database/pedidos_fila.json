@@ -9,5 +9,16 @@
                 "quantidade": 2
             }
         ]
+    },
+    {
+        "id_pedido": "PED003",
+        "nome_solicitante": "Lucas Freitas",
+        "data_solicitacao": "12/06/2025 21:28:55",
+        "itens": [
+            {
+                "codigo_produto": "15487",
+                "quantidade": 2
+            }
+        ]
     }
 ]

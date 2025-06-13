@@ -91,5 +91,16 @@
     "E5": [],
     "E6": [],
     "E7": [],
-    "E8": []
+    "E8": [
+        {
+            "codigo_produto": "15464",
+            "quantidade": 200,
+            "lote": "1178",
+            "validade": "22/05/2025",
+            "fabricacao": "22/06/2022",
+            "preco_compra": "R$ 8,00",
+            "preco_venda": "R$ 12,00",
+            "fornecedor": "Drinks"
+        }
+    ]
 }
